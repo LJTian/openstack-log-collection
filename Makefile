@@ -8,13 +8,16 @@ ACTIVATE := source $(VENV)/bin/activate
 
 IMAGE ?= olc-vm-actions:latest
 
-DSN ?= mysql+asyncmy://root:pass@127.0.0.1:3306/ops?charset=utf8mb4
+DSN ?= mysql+asyncmy://guowang:guowang@10.10.15.35:3306/guowang?charset=utf8mb4
 TABLE ?= nova_compute_action_log
 INCLUDE_DELETE ?= 1
 DERIVE_WINDOW_SEC ?= 120
 API_LOG_PATTERN ?= /var/log/nova/*nova-api*.log
 COMPUTE_LOG_PATTERN ?= /var/log/nova/*nova-compute*.log
 LOGS_DIR ?= /var/log/nova
+
+# Glance 模式
+GLANCE_LOG_PATTERN ?= /var/log/glance/*glance-api*.log
 
 MYSQL_HOST ?= 127.0.0.1
 MYSQL_PORT ?= 3306
@@ -36,7 +39,8 @@ help:
 	@echo "  run          - 本地解析并写入数据库（唯一索引去重）"
 	@echo "  db-init      - 用 mysql 客户端执行 db/schema.sql 初始化库表"
 	@echo "  docker-build - 构建镜像 $(IMAGE)"
-	@echo "  docker-run   - 以容器方式运行（挂载日志目录 $(LOGS_DIR) 到 /logs）"
+	@echo "  docker-run   - 以容器方式运行 VM 模式（挂载 $(LOGS_DIR) 到 /logs）"
+	@echo "  docker-run-glance - 以容器方式运行 Glance 模式（挂载 /var/log/glance 到 /logs）"
 	@echo "  clean        - 清理虚拟环境与缓存文件"
 
 venv:
@@ -77,9 +81,18 @@ docker-run:
 	  -e DERIVE_WINDOW_SEC=$(DERIVE_WINDOW_SEC) \
 	  -e API_LOG_PATTERN="$(API_LOG_PATTERN)" \
 	  -e COMPUTE_LOG_PATTERN="$(COMPUTE_LOG_PATTERN)" \
+	  -e MODE=vm \
 	  -v $(LOGS_DIR):/logs:ro \
 	  $(IMAGE)
 
+docker-run-glance:
+	docker run --rm \
+	  -e DSN="$(DSN)" \
+	  -e TABLE="glance_image_action_log" \
+	  -e GLANCE_LOG_PATTERN="$(GLANCE_LOG_PATTERN)" \
+	  -e MODE=glance \
+	  -v /var/log/glance:/logs:ro \
+	  $(IMAGE)
 clean:
 	rm -rf $(VENV) __pycache__ .pytest_cache
 	find . -name "*.pyc" -delete -o -name "*.pyo" -delete -o -name "*.DS_Store" -delete
