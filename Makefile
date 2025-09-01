@@ -19,6 +19,9 @@ LOGS_DIR ?= /var/log/nova
 # Glance 模式
 GLANCE_LOG_PATTERN ?= /var/log/glance/*glance-api*.log
 
+# Neutron 模式
+NEUTRON_LOG_PATTERN ?= /var/log/neutron/*neutron-server*.log
+
 MYSQL_HOST ?= 127.0.0.1
 MYSQL_PORT ?= 3306
 MYSQL_USER ?= root
@@ -41,6 +44,7 @@ help:
 	@echo "  docker-build - 构建镜像 $(IMAGE)"
 	@echo "  docker-run   - 以容器方式运行 VM 模式（挂载 $(LOGS_DIR) 到 /logs）"
 	@echo "  docker-run-glance - 以容器方式运行 Glance 模式（挂载 /var/log/glance 到 /logs）"
+	@echo "  docker-run-neutron - 以容器方式运行 Neutron 模式（挂载 /var/log/neutron 到 /logs）"
 	@echo "  clean        - 清理虚拟环境与缓存文件"
 
 venv:
@@ -92,6 +96,15 @@ docker-run-glance:
 	  -e GLANCE_LOG_PATTERN="$(GLANCE_LOG_PATTERN)" \
 	  -e MODE=glance \
 	  -v /var/log/glance:/logs:ro \
+	  $(IMAGE)
+
+docker-run-neutron:
+	docker run --rm \
+	  -e DSN="$(DSN)" \
+	  -e TABLE="neutron_action_log" \
+	  -e NEUTRON_LOG_PATTERN="$(NEUTRON_LOG_PATTERN)" \
+	  -e MODE=neutron \
+	  -v /var/log/neutron:/logs:ro \
 	  $(IMAGE)
 clean:
 	rm -rf $(VENV) __pycache__ .pytest_cache

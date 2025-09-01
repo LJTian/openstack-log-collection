@@ -44,4 +44,26 @@ CREATE TABLE IF NOT EXISTS `glance_image_action_log` (
 ALTER TABLE `glance_image_action_log`
   ADD UNIQUE KEY `uq_image_action_ts` (`image_id`, `action`, `ts`);
 
+-- Neutron 网络操作日志表
+
+CREATE TABLE IF NOT EXISTS `neutron_action_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `ts` DATETIME(6) NOT NULL,
+  `resource` VARCHAR(64) NOT NULL,
+  `resource_id` VARCHAR(128) NOT NULL,
+  `user_id` VARCHAR(64) NULL,
+  `action` VARCHAR(32) NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ts` (`ts`),
+  KEY `idx_resource` (`resource`),
+  KEY `idx_resource_id` (`resource_id`),
+  KEY `idx_user_id` (`user_id`),
+  UNIQUE KEY `uq_neutron_action_ts` (`resource`, `resource_id`, `action`, `ts`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 若表已存在，仅补充唯一索引（执行一次即可）
+ALTER TABLE `neutron_action_log`
+  ADD UNIQUE KEY `uq_neutron_action_ts` (`resource`, `resource_id`, `action`, `ts`);
+
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 运行模式：vm | glance
+# 运行模式：vm | glance | neutron
 MODE="${MODE:-vm}"
 
 # 通用参数
@@ -26,15 +26,27 @@ if [[ "$MODE" == "vm" ]]; then
   fi
   exec python -m scripts.extract_vm_actions "${ARGS[@]}"
 else
-  # glance 模式
-  TABLE_DEFAULT="${TABLE:-glance_image_action_log}"
-  GLANCE_LOG_PATTERN=${GLANCE_LOG_PATTERN:-/logs/*glance-api*.log}
+  if [[ "$MODE" == "glance" ]]; then
+    TABLE_DEFAULT="${TABLE:-glance_image_action_log}"
+    GLANCE_LOG_PATTERN=${GLANCE_LOG_PATTERN:-/logs/*glance-api*.log}
 
-  ARGS=(
-    --dsn "${DSN_DEFAULT}"
-    --table "${TABLE_DEFAULT}"
-    --pattern "${GLANCE_LOG_PATTERN}"
-  )
-  exec python -m scripts.extract_glance_actions "${ARGS[@]}"
+    ARGS=(
+      --dsn "${DSN_DEFAULT}"
+      --table "${TABLE_DEFAULT}"
+      --pattern "${GLANCE_LOG_PATTERN}"
+    )
+    exec python -m scripts.extract_glance_actions "${ARGS[@]}"
+  else
+    # neutron 模式
+    TABLE_DEFAULT="${TABLE:-neutron_action_log}"
+    NEUTRON_LOG_PATTERN=${NEUTRON_LOG_PATTERN:-/logs/*neutron-server*.log}
+
+    ARGS=(
+      --dsn "${DSN_DEFAULT}"
+      --table "${TABLE_DEFAULT}"
+      --pattern "${NEUTRON_LOG_PATTERN}"
+    )
+    exec python -m scripts.extract_neutron_actions "${ARGS[@]}"
+  fi
 fi
 

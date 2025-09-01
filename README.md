@@ -43,6 +43,43 @@ docker run --rm \
   olc-vm-actions:latest
 ```
 
+### 容器多模式（VM/Glance/Neutron）
+- VM（Nova）模式：
+```bash
+docker run --rm \
+  -e MODE=vm \
+  -e DSN="mysql+asyncmy://root:pass@host.docker.internal:3306/ops?charset=utf8mb4" \
+  -e TABLE="nova_compute_action_log" \
+  -e INCLUDE_DELETE=1 \
+  -e DERIVE_WINDOW_SEC=120 \
+  -e API_LOG_PATTERN="/logs/*nova-api*.log" \
+  -e COMPUTE_LOG_PATTERN="/logs/*nova-compute*.log" \
+  -v /var/log/nova:/logs:ro \
+  olc-vm-actions:latest
+```
+
+- Glance 模式：
+```bash
+docker run --rm \
+  -e MODE=glance \
+  -e DSN="mysql+asyncmy://root:pass@host.docker.internal:3306/ops?charset=utf8mb4" \
+  -e TABLE="glance_image_action_log" \
+  -e GLANCE_LOG_PATTERN="/logs/*glance-api*.log" \
+  -v /var/log/glance:/logs:ro \
+  olc-vm-actions:latest
+```
+
+- Neutron 模式：
+```bash
+docker run --rm \
+  -e MODE=neutron \
+  -e DSN="mysql+asyncmy://root:pass@host.docker.internal:3306/ops?charset=utf8mb4" \
+  -e TABLE="neutron_action_log" \
+  -e NEUTRON_LOG_PATTERN="/logs/*neutron-server*.log" \
+  -v /var/log/neutron:/logs:ro \
+  olc-vm-actions:latest
+```
+
 - 写入数据库（会先清空目标表）：
 ```bash
 python -m scripts.extract_vm_actions --include-delete --derive-window-sec 120 \
