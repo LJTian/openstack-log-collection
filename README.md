@@ -43,7 +43,7 @@ docker run --rm \
   olc-vm-actions:latest
 ```
 
-### 容器多模式（VM/Glance/Neutron）
+### 容器多模式（VM/Glance/Neutron/Heat）
 - VM（Nova）模式：
 ```bash
 docker run --rm \
@@ -80,6 +80,18 @@ docker run --rm \
   olc-vm-actions:latest
 ```
 
+- Heat 模式：
+```bash
+docker run --rm \
+  -e MODE=heat \
+  -e DSN="mysql+asyncmy://root:pass@host.docker.internal:3306/ops?charset=utf8mb4" \
+  -e TABLE="heat_action_log" \
+  -e HEAT_API_PATTERN="/logs/*heat-api*.log" \
+  -e HEAT_ENGINE_PATTERN="/logs/*heat-engine*.log" \
+  -v /var/log/heat:/logs:ro \
+  olc-vm-actions:latest
+```
+
 - 写入数据库（会先清空目标表）：
 ```bash
 python -m scripts.extract_vm_actions --include-delete --derive-window-sec 120 \
@@ -99,3 +111,4 @@ python -m scripts.extract_vm_actions --include-delete --derive-window-sec 120 \
 
 ### 注意
 - 样例日志中“VM Paused”多为创建/迁移的自动事件，通常不计入“用户暂停”。
+ - Heat create 若缺少 UUID 也会入库（以 stack_name 占位），若 `stack_name` 与 `stack_id` 同为空则跳过。

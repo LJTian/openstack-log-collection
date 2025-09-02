@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 运行模式：vm | glance | neutron
+# 运行模式：vm | glance | neutron | heat
 MODE="${MODE:-vm}"
 
 # 通用参数
@@ -37,16 +37,30 @@ else
     )
     exec python -m scripts.extract_glance_actions "${ARGS[@]}"
   else
-    # neutron 模式
-    TABLE_DEFAULT="${TABLE:-neutron_action_log}"
-    NEUTRON_LOG_PATTERN=${NEUTRON_LOG_PATTERN:-/logs/*neutron-server*.log}
+    if [[ "$MODE" == "heat" ]]; then
+      TABLE_DEFAULT="${TABLE:-heat_action_log}"
+      HEAT_API_PATTERN=${HEAT_API_PATTERN:-/logs/*heat-api*.log}
+      HEAT_ENGINE_PATTERN=${HEAT_ENGINE_PATTERN:-/logs/*heat-engine*.log}
 
-    ARGS=(
-      --dsn "${DSN_DEFAULT}"
-      --table "${TABLE_DEFAULT}"
-      --pattern "${NEUTRON_LOG_PATTERN}"
-    )
-    exec python -m scripts.extract_neutron_actions "${ARGS[@]}"
+      ARGS=(
+        --dsn "${DSN_DEFAULT}"
+        --table "${TABLE_DEFAULT}"
+        --pattern "${HEAT_API_PATTERN}"
+        --pattern "${HEAT_ENGINE_PATTERN}"
+      )
+      exec python -m scripts.extract_heat_actions "${ARGS[@]}"
+    else
+      # neutron 模式
+      TABLE_DEFAULT="${TABLE:-neutron_action_log}"
+      NEUTRON_LOG_PATTERN=${NEUTRON_LOG_PATTERN:-/logs/*neutron-server*.log}
+
+      ARGS=(
+        --dsn "${DSN_DEFAULT}"
+        --table "${TABLE_DEFAULT}"
+        --pattern "${NEUTRON_LOG_PATTERN}"
+      )
+      exec python -m scripts.extract_neutron_actions "${ARGS[@]}"
+    fi
   fi
 fi
 

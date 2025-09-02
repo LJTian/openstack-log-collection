@@ -33,7 +33,7 @@ else
 INCLUDE_FLAG :=
 endif
 
-.PHONY: help venv dry-run run db-init docker-build docker-run clean
+.PHONY: help venv dry-run run db-init docker-build docker-run docker-run-glance docker-run-neutron docker-run-heat clean
 
 help:
 	@echo "可用目标："
@@ -45,7 +45,7 @@ help:
 	@echo "  docker-run   - 以容器方式运行 VM 模式（挂载 $(LOGS_DIR) 到 /logs）"
 	@echo "  docker-run-glance - 以容器方式运行 Glance 模式（挂载 /var/log/glance 到 /logs）"
 	@echo "  docker-run-neutron - 以容器方式运行 Neutron 模式（挂载 /var/log/neutron 到 /logs）"
-	@echo "  clean        - 清理虚拟环境与缓存文件"
+	@echo "  docker-run-heat - 以容器方式运行 Heat 模式（挂载 /var/log/heat 到 /logs）"
 
 venv:
 	$(PY) -m venv $(VENV)
@@ -106,6 +106,17 @@ docker-run-neutron:
 	  -e MODE=neutron \
 	  -v /var/log/neutron:/logs:ro \
 	  $(IMAGE)
+
+docker-run-heat:
+	docker run --rm \
+	  -e DSN="$(DSN)" \
+	  -e TABLE="heat_action_log" \
+	  -e HEAT_API_PATTERN="/logs/*heat-api*.log" \
+	  -e HEAT_ENGINE_PATTERN="/logs/*heat-engine*.log" \
+	  -e MODE=heat \
+	  -v /var/log/heat:/logs:ro \
+	  $(IMAGE)
+
 clean:
 	rm -rf $(VENV) __pycache__ .pytest_cache
 	find . -name "*.pyc" -delete -o -name "*.pyo" -delete -o -name "*.DS_Store" -delete
